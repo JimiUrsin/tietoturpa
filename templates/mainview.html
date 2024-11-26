@@ -1,0 +1,18 @@
+<h1>Welcome, {{request.user}}</h1>
+
+{% if todos %}
+    <ul>
+    {% for todo in todos %}
+        <li>{{todo.description}}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <h3>You have no todos</h3>
+{% endif %}
+
+Add a todo
+<form action="/addtodo" method="POST">
+    Description
+    <input type="text" name="description" required/>
+    <button type="submit">Add</button>
+</form>
