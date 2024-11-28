@@ -27,11 +27,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-LOGIN_URL = "/todo"
+LOGIN_URL = "/login"
 # Application definition
 
 INSTALLED_APPS = [
-    'todo',
+    'forum',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -1,10 +1,31 @@
-<h1>Welcome! Please log in</h1>
+{% if user.is_authenticated %}
+    <h1>Welcome, {{user.username}}!</h1>
+    <form action="/logout" method="POST">
+        {% csrf_token %}    
+        <button type="submit">Log out</button>
+    </form>
+{% else %}
+    <h1>Welcome!</h1>
+    <p><a href="/loginscreen">Log in</a><p>
+{% endif %}
 
-<form action="/login" method="POST">
-    Username
-    <input type="text" name="username" required/>
-    Password
-    <input type="password" name="password" required/>
+<div>
+{% if not messages %}
+There are no messages
+{% else %}
+    <ul>
+    {% for message in messages %}
+    <li>{{message.user.username}}: {{message.message}}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+</div>
 
-    <button type="submit">Log In</button>
+{% if user.is_authenticated %}
+Add a message
+<form action="/postmessage" method="POST">
+    Message
+    <input type="text" name="message" required/>
+    <button type="submit">Post</button>
 </form>
+{% endif %}

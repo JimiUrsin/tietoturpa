@@ -10,8 +10,8 @@
     <h3>You have no todos</h3>
 {% endif %}
 
-Add a todo
 <form action="/addtodo" method="POST">
+    {% csrf_token %}
     Description
     <input type="text" name="description" required/>
     <button type="submit">Add</button>
