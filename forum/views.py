@@ -111,7 +111,15 @@ def postMessage(request):
         conn.executescript(query)
     # Insecure version ends
 
-    # Secure version
+    # Secure raw version
+    # database = DATABASES.get("default").get("NAME")
+    # query = f"INSERT INTO forum_message(user_id, message) VALUES (?, ?)"
+    # conn = sqlite3.connect(database)
+    # with conn:
+    #     conn.execute(query, (request.user.id, messagetext))
+    # Secure raw version ends
+
+    # Secure version alt
     # Message.objects.create(user=request.user, message=messagetext)
     # Secure version ends
 
