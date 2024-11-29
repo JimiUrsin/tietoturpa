@@ -33,6 +33,7 @@ There are no messages
 {% if user.is_authenticated %}
 Add a message
 <form action="/postmessage" method="POST">
+    {% csrf_token %}
     Message
     <input type="text" name="message" required/>
     <button type="submit">Post</button>
