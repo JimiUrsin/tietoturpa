@@ -92,6 +92,8 @@ def logOut(request):
 # Uncomment for secure version
 # @login_required
 def adminScreen(request):
+    # if not request.user.is_superuser:
+    #     return redirect("index")
     allusers = User.objects.all()
     return render(request, "adminScreen.html", {"users": allusers})
 
