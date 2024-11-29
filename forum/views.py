@@ -45,6 +45,7 @@ def forgotPassword(request):
 def forgotPasswordPost(request):
     username = request.POST.get("username")
     user = User.objects.get(username=username)
+    # Insecure version
     user_dob = RecoveryAnswer.objects.get(user=user)
 
     given_dob = request.POST.get("dob")
@@ -53,6 +54,10 @@ def forgotPasswordPost(request):
         user.set_password(password)
         user.save()
         return redirect("passwordchanged")
+    # Insecure version ends
+    # Secure version
+    # Send a password recovery email (not going to implement because that is way too complicated)
+    # Secure version ends
 
     return redirect("passwordnotchanged")
 
