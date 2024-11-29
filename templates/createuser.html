@@ -1,0 +1,19 @@
+<h1>Create user</h1>
+
+<form action="/createuserpost" method="POST">
+    {% csrf_token %}
+    <label for="username">Username</label>
+    <div><input type="text" name="username" required/><div>
+
+    <label for="password">Password</label>
+    <div><input type="password" name="password" required/></div>
+
+    <label for="email">E-mail address</label>
+    <div><input type="email" name="email" required/></div>
+
+    <label for="dob">What is your date of birth? Answer in the form of YYYY-MM-DD. You can use this to recover your password</label>
+    <div><input type="text" name="dob" required/></div>
+    <button type="submit">Create user</button>
+</form>
+
+<div><a href="/">Home page</a></div>

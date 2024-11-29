@@ -6,8 +6,14 @@
     </form>
 {% else %}
     <h1>Welcome!</h1>
-    <p><a href="/loginscreen">Log in</a><p>
+    <div><a href="/loginscreen">Log in</a><div>
+    <div><a href="/createuser">Create user</a><div>
 {% endif %}
+
+{% if user.is_superuser %}
+<div><a href="/adminscreen">Administrate users</a></div>
+{% endif %}
+
 
 <div>
 {% if not messages %}
@@ -15,7 +21,10 @@ There are no messages
 {% else %}
     <ul>
     {% for message in messages %}
-    <li>{{message.user.username}}: {{message.message}}</li>
+        {# Secure version below #}
+        {# <li>{{message.user.username}}: {{message.message}}</li> #}
+        {# Insecure version below #}
+        <li>{{message.user.username}}: {{message.message|safe}}</li>
     {% endfor %}
     </ul>
 {% endif %}
