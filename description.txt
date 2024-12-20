@@ -1,0 +1,49 @@
+LINK: https://github.com/JimiUrsin/tietoturpa
+
+You can run the application by doing the following:
+- Clone the repository
+- Run "python manage.py makemigrations forum"
+- Run "python manage.py migrate"
+- Run "python manage.py runserver"
+
+In my application, I have added vulnerabilities that correspond to the OWASP Top Ten list of 2017. Also CSRF, because that was allowed.
+
+FLAW 1:
+https://github.com/JimiUrsin/tietoturpa/blob/main/forum/views.py#L108-L114
+A1:2017-Injection
+In the application you can send messages to a forum. The messages are added into the message database via a raw SQL query. The query itself is created by an unchecked string interpolation, which makes users able to run any type of SQL command they want. For example, posting the following message will delete all messages from the forum (without the double quotes, of course): "a'); DELETE FROM forum_message; --"
+
+Fix: https://github.com/JimiUrsin/tietoturpa/blob/main/forum/views.py#L116-L126
+There are reasons sometimes to use raw SQL queries, but this is not really a complex enough case for that. That's why there are two fixes. One of the fixes is the secure version of using a raw SQL query. This lets sqlite3 handle the arguments, and prevents SQL injection attacks, by ensuring that arguments of a query are never interpreted as parts of the query itself. Also, the secure raw version uses connection.execute(), which is only allowed to execute one command. This means that even if there was a possibility of an injection, multiple commands could not be executed with that query.
+The second fix (better one in this case) just uses Django's own database manipulation features. This also handles the insertion of arguments for us, and prevents any SQL injection attacks.
+
+FLAW 2:
+https://github.com/JimiUrsin/tietoturpa/blob/main/forum/views.py#L48-L57
+A2:2017-Broken Authentication
+Users are required to give a date of birth that can be used to change their password. Dates of birth are not really secret information (or mothers' maiden names, or first pets' names, which also used to be recovery questions quite often). This means that if you happen to know someone's username on the site and their date of birth, you can recover their account to yourself, without ever getting knowledge of their password.
+
+Fix: Disable this password recovery method, and use alternative means of password recovery. A usual one is sending users an email with a link that contains a token that can be used to set a new password. This token should be short-lived (usable for less than 24 hours) and impossible to guess. This is probably the most common method nowadays for recovering a password. This method is not perfect, of course, because email accounts can be compromised. Another method is sending a code to the user via a text message that can be used to set a new password, but this is not infallible either, because SIM swapping scams can be done if you know another user's phone number. For most applications, either of these two methods is usually considered good enough.
+
+FLAW 3:
+https://github.com/JimiUrsin/tietoturpa/blob/main/forum/views.py#L92-L96
+A5:2017-Broken Access Control
+The administrator view doesn't check if the user is a superuser. This means that anyone can take a look at the supposedly secret administrator view. In the website template, the administrator view's button is not rendered if the user is not a superuser but this doesn't mean that someone with the link wouldn't be able to access the site. You can try this yourself by simply going into the /adminscreen page.
+If you run the application with the fix, you might want to test it out by creating a superuser with "python manage.py createsuperuser".
+
+Fix: The fix is included in the linked spot. The @login_required decorator from Django makes sure that only people who are logged in can access the function it's decorating. This is not enough, however, as we still need to check that the user has rights to view the page. Uncommenting the superuser check on lines 95-96 would make this view secure. This would make sure that anyone who doesn't have rights to the administrator view is redirected back to the home page.
+
+FLAW 4:
+https://github.com/JimiUrsin/tietoturpa/blob/main/templates/index.html#L27
+A7:2017-Cross-Site Scripting (XSS)
+The message view is vulnerable to a cross-site scripting attack. This means that the messages are rendered as HTML exactly as they are received from the server. This would mean that any malicious parties would be able to post a script on the website that would be run each time someone loads the message board view. You can try this out yourself by posting, for example, "<a href="/adminscreen">Hello</a>". In a secure application this is not supposed to happen, but here the message would be rendered as HTML, and it would result in the message posted being a link to the previously mentioned hidden admin view.
+
+Fix: https://github.com/JimiUrsin/tietoturpa/blob/main/templates/index.html#L25
+Fixing this is quite easy, and just involves telling the Django renderer to not trust any content that is given to it in the messages by removing the safe flag. When this is removed, posting the message above would result in it not being rendered as HTML, but as simple text. This means that the template rendering engine will take all characters that correspond to special characters in HTML (for example the angle brackets <>) and "escape" them into special character sequences that will be rendered as the wanted character on your screen. For example, if a message contains the left angle bracket <, that will be turned into the characters "&lt;" (without quotes). This sequence of characters tells your browser to insert the character < there as text.
+
+FLAW 5:
+https://github.com/JimiUrsin/tietoturpa/blob/main/forum/views.py#L101
+CSRF
+The message POST command has been made vulnerable to CSRF attacks by adding the @csrf_exempt decorator. In a real-life situation, something like this could have been done during early development, and should be removed before the application makes it to production. Having the message posting vulnerable to CSRF means that anyone who is able to make you load some HTML would be able to post a message on your behalf. Combined with the vulnerabilities above, you can create an XSS script that will keep posting messages on your behalf. This only works because CSRF is not checked for:
+<form name="sendmsg" action="/postmessage" method="POST"><input type="text" name="message" required value="Night night"/><button type="submit">Post</button></form><script type="text/javascript">document.sendmsg.submit();</script>
+
+Fix: Remove the @csrf_exempt decorator from the linked line. This would make sure that all message sending POST requests require a CSRF token. There already is a CSRF token in the form on the main page, but this was ignored before. Removing the @csrf_exempt line makes sure that all requests made to the server by a certain client are actually initiated by them.
